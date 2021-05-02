@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  web:
+    container_name: web # コンテナ名
+    build:
+      context: ./
+      dockerfile: ./web/Dockerfile
+    environment:
+      TZ: 'Asia/Tokyo'
+    ports:
+      - 8000:8000
+    volumes:
+      - ./web/logs/nginx/:/var/log/nginx/
+      - ./web/uwsgi_params:/etc/nginx/uwsgi_params
+      - ./back/static:/var/www/static/
+    depends_on: # web実行前に、back→dbの順に起動
+      - back
+      - db
+
+  back:
+    container_name: back # コンテナ名
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    command: 'sh /server/start.sh'
+    expose:
+      - "8001"
+    volumes:
+      - ./back:/server/
+
+  front:
+    container_name: front # コンテナ名
+    build:
+      context: ./front
+    volumes:
+      - ./front:/app/:cached
+    ports:
+      - "8080:8080"
+
+  db:
+    image: postgres:latest
+    container_name: db # コンテナ名
+    restart: always
+    ports:
+          - 5432:5432
+    environment:
+        POSTGRES_DB: 'db_sample' # DB名
+        POSTGRES_USER: 'user_sample' # DBのユーザー名（＝DB名）
+        POSTGRES_PASSWORD: 'pw_sample' # DBのパスワード
+    volumes:
+        - .\init_db:/docker-entrypoint-initdb.d
