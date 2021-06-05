@@ -1,6 +1,11 @@
 module.exports = {
-  devServer: {
-    disableHostCheck: true,
+  configureWebpack: {
+    devtool: 'source-map',
+    devServer: {
+      watchOptions: {
+        poll: true
+      },    
+    },
   },
 
   transpileDependencies: ['vuetify'],
